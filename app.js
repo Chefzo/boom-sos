@@ -323,26 +323,11 @@
   $("#askBtn").addEventListener("click", () => runAsk($("#askInput").value));
   $("#askInput").addEventListener("keydown", (e) => { if (e.key === "Enter") runAsk($("#askInput").value); });
 
-  /* ---------------- Incident log (localStorage) ---------------- */
-  const LS_KEY = "boomSOS.highlands.incidents";
-  function loadIncidents() {
-    try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
-    catch (e) { return []; }
-  }
-  function persist(list) { localStorage.setItem(LS_KEY, JSON.stringify(list)); }
-  function saveIncident(inc) {
-    const list = loadIncidents();
-    inc.id = "inc_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-    inc.ts = Date.now();
-    inc.mod = inc.mod || "[MOD]";
-    list.unshift(inc);
-    persist(list);
-  }
-  function updateIncident(id, patch) {
-    const list = loadIncidents();
-    const i = list.findIndex((x) => x.id === id);
-    if (i >= 0) { Object.assign(list[i], patch); persist(list); }
-  }
+  /* ---------------- Incident log (Supabase-backed, offline-first) ---------------- */
+  // Storage + sync live in store.js (IncidentStore). These are thin wrappers.
+  function loadIncidents() { return IncidentStore.list(); }
+  function saveIncident(inc) { return IncidentStore.add(inc); }
+  function updateIncident(id, patch) { IncidentStore.update(id, patch); }
 
   let currentView = "open";
   let currentFilter = "";
@@ -396,12 +381,23 @@
   function renderIncidents() {
     const host = $("#incidentList");
     host.innerHTML = "";
+    host.appendChild(syncStatusLine());
     const list = filterIncidents(loadIncidents());
     if (!list.length) {
       host.appendChild(el("div", "empty", "No incidents here. That's a good thing."));
       return;
     }
     list.forEach((inc) => host.appendChild(incidentCard(inc)));
+  }
+
+  function syncStatusLine() {
+    const s = IncidentStore.status();
+    let txt, cls;
+    if (!s.configured) { txt = "Local only — backend not configured"; cls = "off"; }
+    else if (!s.online) { txt = `Offline — ${s.pending} change${s.pending === 1 ? "" : "s"} will sync when back online`; cls = "off"; }
+    else if (s.pending) { txt = `Syncing ${s.pending} change${s.pending === 1 ? "" : "s"}…`; cls = "pending"; }
+    else { txt = "Synced — shared across managers"; cls = "ok"; }
+    return el("div", "sync-status " + cls, esc(txt));
   }
 
   function incidentCard(inc) {
@@ -575,5 +571,9 @@
   }
 
   /* ---------------- Init ---------------- */
+  IncidentStore.subscribe(() => {
+    if ($("#panel-log").classList.contains("active")) renderIncidents();
+  });
+  IncidentStore.init();
   renderIncidents();
 })();

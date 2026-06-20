@@ -27,6 +27,8 @@ Or just open `index.html` directly in a browser.
 | `styles.css` | Mobile-first styling (big buttons, phone-first) |
 | `app.js` | All behavior — flows, search, Ask Boom, incident log |
 | `data.js` | **All store-specific content lives here** |
+| `store.js` | Incident storage + Supabase sync (offline-first) |
+| `config.js` | Backend URL + publishable key |
 
 ## The page
 
@@ -47,9 +49,33 @@ or shown as `(xxx) xxx-xxxx`. Fill in:
 - Emergency spend / comp / refund limits (`PLAYBOOKS`)
 - Store-specific quirks and known recurring issues
 
+## Backend (incident log)
+
+The incident log is backed by **Supabase** (Postgres + PostgREST), so entries
+roll up across every manager and, later, across stores.
+
+- **Offline-first.** `localStorage` is always the working copy, so the log
+  keeps working when the internet is down — which is one of the emergencies
+  this tool exists for. Changes are marked dirty and pushed to Supabase when
+  the connection returns. The Log tab shows a live sync status.
+- **Where it lives.** Table `public.boom_sos_incidents` in the
+  `staybook-guidebook` Supabase project (co-located to stay within the free
+  tier; namespaced so it's cleanly separated). Swapping to a dedicated project
+  later is just a `config.js` change.
+- **Config.** `config.js` holds the project URL and the **publishable** key.
+  That key is meant to be public — access is governed by row-level security,
+  not by hiding it.
+- **RLS.** The `anon` role can read / insert / update incidents; **deletes are
+  blocked** so history can't be wiped from the client.
+
+### Known tradeoff before real rollout
+
+There's no auth yet, so the insert/update policies are permissive
+(`with check (true)`) — anyone with the URL + publishable key can write to the
+log. That's fine for an internal prototype, but **add Supabase Auth and scope
+the policies to signed-in managers before this goes live.**
+
 ## Notes
 
-- The incident log is stored locally in the manager's browser. A shared
-  backend (so logs roll up across managers/stores) is the natural next step.
 - Ask Boom is rule-based keyword matching today — intentionally no
   "AI assistant" language, just tight ops answers.
