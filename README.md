@@ -27,6 +27,7 @@ Or just open `index.html` directly in a browser.
 | `styles.css` | Mobile-first styling (big buttons, phone-first) |
 | `app.js` | All behavior — flows, search, Ask Boom, incident log |
 | `data.js` | **All store-specific content lives here** |
+| `auth.js` | Email magic-link sign-in (gates the log only) |
 | `store.js` | Incident storage + Supabase sync (offline-first) |
 | `config.js` | Backend URL + publishable key |
 
@@ -51,8 +52,8 @@ or shown as `(xxx) xxx-xxxx`. Fill in:
 
 ## Backend (incident log)
 
-The incident log is backed by **Supabase** (Postgres + PostgREST), so entries
-roll up across every manager and, later, across stores.
+The incident log is backed by **Supabase** (Postgres), so entries roll up
+across every manager and, later, across stores.
 
 - **Offline-first.** `localStorage` is always the working copy, so the log
   keeps working when the internet is down — which is one of the emergencies
@@ -63,17 +64,54 @@ roll up across every manager and, later, across stores.
   tier; namespaced so it's cleanly separated). Swapping to a dedicated project
   later is just a `config.js` change.
 - **Config.** `config.js` holds the project URL and the **publishable** key.
-  That key is meant to be public — access is governed by row-level security,
-  not by hiding it.
-- **RLS.** The `anon` role can read / insert / update incidents; **deletes are
-  blocked** so history can't be wiped from the client.
+  That key is meant to be public — access is governed by row-level security
+  and sign-in, not by hiding it.
 
-### Known tradeoff before real rollout
+## Auth (who can use the log)
 
-There's no auth yet, so the insert/update policies are permissive
-(`with check (true)`) — anyone with the URL + publishable key can write to the
-log. That's fine for an internal prototype, but **add Supabase Auth and scope
-the policies to signed-in managers before this goes live.**
+The emergency reference content (cards, vendors, playbooks, Ask Boom) is
+**open — never behind a login**. You should never have to sign in to read
+"shut off the gas." Only the shared **incident log** requires sign-in.
+
+- **Email magic link.** A manager enters their work email and gets a one-tap
+  sign-in link — no password. Sessions persist, so it's a one-time step, and
+  the log keeps working offline afterward.
+- **Manager allowlist.** Only emails in `public.boom_sos_managers` can read or
+  write the log. Signing in with an email that isn't on the list authenticates
+  but shows "not authorized" — no access to the data.
+- **RLS.** Every incident operation requires an authenticated, allowlisted
+  manager. **Deletes are blocked** so history can't be wiped from the client.
+
+### One-time Supabase dashboard setup
+
+Two settings can't be done from code — do them once in the Supabase dashboard
+for the `staybook-guidebook` project:
+
+1. **Auth → Providers → Email:** make sure Email is enabled (magic link works
+   out of the box; no password needed).
+2. **Auth → URL Configuration:** set the **Site URL** to wherever you host the
+   page, and add it (plus `http://localhost:8000` for local testing) to the
+   **Redirect URLs** allowlist. The magic-link email returns the manager here.
+
+> Supabase's built-in email has low rate limits and may land in spam. For real
+> rollout, configure SMTP under Auth → Emails.
+
+### Adding / removing managers
+
+Until there's an admin UI, manage the allowlist in the Supabase SQL editor:
+
+```sql
+-- add a manager
+insert into public.boom_sos_managers (email, name, store, role)
+values ('manager@boombozz.com', 'First Last', 'Highlands', 'manager');
+
+-- revoke access (keeps their history intact)
+update public.boom_sos_managers set active = false
+where email = 'manager@boombozz.com';
+```
+
+`javenzo1@gmail.com` is seeded as the initial admin so you can sign in
+immediately.
 
 ## Notes
 

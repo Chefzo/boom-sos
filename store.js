@@ -16,8 +16,11 @@
 
   const CFG = window.BOOM_SOS_CONFIG || {};
   const LS_KEY = "boomSOS.highlands.incidents";
-  const CONFIGURED = !!(CFG.supabaseUrl && CFG.supabaseKey);
+  // Backed by Supabase only when the client + auth module are present.
+  const CONFIGURED = !!(CFG.supabaseUrl && CFG.supabaseKey && window.sb);
   const STORE_NAME = CFG.store || "Highlands";
+  const canSync = () =>
+    CONFIGURED && navigator.onLine && window.BoomAuth && window.BoomAuth.isManager();
 
   let cache = [];
   const listeners = [];
@@ -78,37 +81,24 @@
     };
   }
 
-  /* ---- remote (PostgREST) ---- */
-  function headers(extra) {
-    return Object.assign(
-      {
-        apikey: CFG.supabaseKey,
-        Authorization: "Bearer " + CFG.supabaseKey,
-        "Content-Type": "application/json",
-      },
-      extra || {}
-    );
-  }
+  /* ---- remote (Supabase client, runs as the signed-in manager) ---- */
   async function remoteList() {
-    const url =
-      `${CFG.supabaseUrl}/rest/v1/${CFG.table}` +
-      `?store=eq.${encodeURIComponent(STORE_NAME)}&order=created_at.desc`;
-    const res = await fetch(url, { headers: headers() });
-    if (!res.ok) throw new Error("list " + res.status);
-    return res.json();
+    const { data, error } = await window.sb
+      .from(CFG.table)
+      .select("*")
+      .eq("store", STORE_NAME)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
   }
   async function remoteUpsert(inc) {
-    const res = await fetch(`${CFG.supabaseUrl}/rest/v1/${CFG.table}`, {
-      method: "POST",
-      headers: headers({ Prefer: "resolution=merge-duplicates,return=minimal" }),
-      body: JSON.stringify(toRow(inc)),
-    });
-    if (!res.ok) throw new Error("upsert " + res.status);
+    const { error } = await window.sb.from(CFG.table).upsert(toRow(inc));
+    if (error) throw error;
   }
 
   /* ---- sync ---- */
   async function sync() {
-    if (!CONFIGURED || !navigator.onLine || syncing) return;
+    if (!canSync() || syncing) return;
     syncing = true;
     try {
       // push local changes first

@@ -47,12 +47,44 @@
   logBtn.addEventListener("click", () => switchTab("log"));
   qc.appendChild(logBtn);
 
+  // Auth chip (sign in / who's signed in). Only meaningful with a backend.
+  const authChip = el("button", "qc-btn auth");
+  authChip.addEventListener("click", () => {
+    if (BoomAuth.isAuthed()) {
+      if (confirm("Sign out of Boom SOS?")) BoomAuth.signOut();
+    } else {
+      switchTab("log");
+    }
+  });
+  function renderAuthChip() {
+    if (!BoomAuth.configured) { authChip.hidden = true; return; }
+    authChip.hidden = false;
+    if (BoomAuth.isManager()) authChip.innerHTML = `👤 ${esc(BoomAuth.displayName())}`;
+    else if (BoomAuth.isAuthed()) authChip.innerHTML = `⚠️ Not authorized`;
+    else authChip.innerHTML = `🔓 Sign in`;
+  }
+  qc.appendChild(authChip);
+
+  // Blocks logging actions for anyone who isn't a signed-in manager.
+  function requireLogAuth() {
+    if (BoomAuth.configured && !BoomAuth.isManager()) {
+      toast(BoomAuth.isAuthed()
+        ? "Your email isn't on the manager list yet"
+        : "Sign in on the Log tab to record incidents");
+      switchTab("log");
+      return false;
+    }
+    return true;
+  }
+  const currentManagerName = () =>
+    (BoomAuth.configured && BoomAuth.displayName()) || "[MOD]";
+
   /* ---------------- Tabs ---------------- */
   function switchTab(name) {
     $$(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
     $$(".panel").forEach((p) => p.classList.toggle("active", p.id === "panel-" + name));
     window.scrollTo({ top: 0, behavior: "smooth" });
-    if (name === "log") renderIncidents();
+    if (name === "log") refreshLog();
   }
   $$(".tab").forEach((t) => t.addEventListener("click", () => switchTab(t.dataset.tab)));
 
@@ -127,6 +159,7 @@
     qBlock.appendChild(form);
     const saveBtn = el("button", "btn primary full", "Save to incident log");
     saveBtn.addEventListener("click", () => {
+      if (!requireLogAuth()) { closeModal(); return; }
       saveIncident(buildIncidentFromFlow(card, answers));
       toast("Logged ✓");
       closeModal();
@@ -175,6 +208,7 @@
       type: card.title,
       category: categoryForCard(card.id),
       details,
+      mod: currentManagerName(),
       tempReported: answers.temp || "",
       vendorContacted: (answers.vendorCalled || "").toLowerCase() === "yes",
       eta: answers.eta || "",
@@ -220,8 +254,10 @@
   }
 
   function vendorCard(v) {
-    const badge =
-      v.approved === true ? `<span class="badge ok">Approved</span>`
+    const needsInfo = /^\s*\[/.test(v.primary.name || "") || !realPhone(v.primary.phone);
+    const badge = needsInfo
+      ? `<span class="badge no">Needs info</span>`
+      : v.approved === true ? `<span class="badge ok">Approved</span>`
       : v.approved === false ? `<span class="badge no">Not approved</span>`
       : `<span class="badge unk">Unconfirmed</span>`;
     const card = el("div", "vendor-card",
@@ -346,7 +382,7 @@
       currentFilter = c.dataset.filter;
       renderIncidents();
     }));
-  $("#newIncidentBtn").addEventListener("click", () => openIncidentForm(null));
+  $("#newIncidentBtn").addEventListener("click", () => { if (requireLogAuth()) openIncidentForm(null); });
 
   function filterIncidents(list) {
     const now = new Date();
@@ -376,6 +412,63 @@
     const sameDay = d.toDateString() === today.toDateString();
     const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     return sameDay ? time : d.toLocaleDateString([], { month: "short", day: "numeric" }) + " " + time;
+  }
+
+  // Decide whether to show the log, the sign-in card, or a not-authorized card.
+  function refreshLog() {
+    const gated = BoomAuth.configured && !BoomAuth.isManager();
+    ["#logViews", "#logFilters", "#newIncidentBtn"].forEach((s) => {
+      const node = $(s);
+      if (node) node.style.display = gated ? "none" : "";
+    });
+    if (gated) renderLogGate();
+    else renderIncidents();
+  }
+
+  function renderLogGate() {
+    const host = $("#incidentList");
+    host.innerHTML = "";
+    if (BoomAuth.isAuthed()) {
+      // Signed in but email isn't on the allowlist.
+      const card = el("div", "gate",
+        `<h3>Not authorized yet</h3>
+         <p>You're signed in as <strong>${esc(BoomAuth.email())}</strong>, but that
+         email isn't on the Highlands manager list. Ask an admin to add it.</p>`);
+      const out = el("button", "btn ghost full", "Sign out");
+      out.addEventListener("click", () => BoomAuth.signOut());
+      card.appendChild(out);
+      host.appendChild(card);
+      return;
+    }
+    const last = localStorage.getItem("boomSOS.lastEmail") || "";
+    const card = el("div", "gate",
+      `<h3>Sign in to the incident log</h3>
+       <p>The shared log is for Highlands managers. Enter your work email and
+       we'll send a one-tap sign-in link — no password.</p>`);
+    const field = el("div", "field",
+      `<label>Work email</label><input id="gateEmail" type="email" inputmode="email"
+        autocomplete="email" value="${esc(last)}" placeholder="you@boombozz.com">`);
+    card.appendChild(field);
+    const send = el("button", "btn primary full", "Send sign-in link");
+    send.addEventListener("click", async () => {
+      const email = $("#gateEmail", card).value.trim();
+      if (!email || !/.+@.+\..+/.test(email)) { toast("Enter a valid email"); return; }
+      localStorage.setItem("boomSOS.lastEmail", email);
+      send.disabled = true; send.textContent = "Sending…";
+      try {
+        await BoomAuth.sendMagicLink(email);
+        host.innerHTML = "";
+        host.appendChild(el("div", "gate",
+          `<h3>Check your email</h3>
+           <p>We sent a sign-in link to <strong>${esc(email)}</strong>. Open it on
+           this device to finish signing in.</p>`));
+      } catch (e) {
+        send.disabled = false; send.textContent = "Send sign-in link";
+        toast("Couldn't send link: " + (e && e.message ? e.message : "try again"));
+      }
+    });
+    card.appendChild(send);
+    host.appendChild(card);
   }
 
   function renderIncidents() {
@@ -474,7 +567,8 @@
     wrap.appendChild(catField);
 
     const modField = el("div", "field",
-      `<label>Manager on duty</label><input id="f_mod" type="text" placeholder="Your name">`);
+      `<label>Manager on duty</label><input id="f_mod" type="text" placeholder="Your name"
+        value="${esc(currentManagerName() === "[MOD]" ? "" : currentManagerName())}">`);
     wrap.appendChild(modField);
 
     const detailField = el("div", "field",
@@ -498,6 +592,7 @@
 
     const save = el("button", "btn primary full", "Save to incident log");
     save.addEventListener("click", () => {
+      if (!requireLogAuth()) { closeModal(); return; }
       const issue = $("#f_issue", wrap).value.trim();
       if (!issue) { toast("Add what happened first"); return; }
       saveIncident({
@@ -571,9 +666,19 @@
   }
 
   /* ---------------- Init ---------------- */
-  IncidentStore.subscribe(() => {
-    if ($("#panel-log").classList.contains("active")) renderIncidents();
+  const refreshLogIfActive = () => {
+    if ($("#panel-log").classList.contains("active")) refreshLog();
+  };
+  IncidentStore.subscribe(refreshLogIfActive);
+
+  // React to sign-in / sign-out: update the chip, re-render the log, pull data.
+  BoomAuth.onChange(() => {
+    renderAuthChip();
+    refreshLogIfActive();
+    IncidentStore.refresh();
   });
+  renderAuthChip();
+
   IncidentStore.init();
-  renderIncidents();
+  refreshLog();
 })();
