@@ -485,11 +485,26 @@
 
   function syncStatusLine() {
     const s = IncidentStore.status();
+    const n = s.pending;
+    const plural = n === 1 ? "" : "s";
     let txt, cls;
-    if (!s.configured) { txt = "Local only - backend not configured"; cls = "off"; }
-    else if (!s.online) { txt = `Offline - ${s.pending} change${s.pending === 1 ? "" : "s"} will sync when back online`; cls = "off"; }
-    else if (s.pending) { txt = `Syncing ${s.pending} change${s.pending === 1 ? "" : "s"}…`; cls = "pending"; }
-    else { txt = "Synced - shared across managers"; cls = "ok"; }
+    if (s.persistError) {
+      txt = "Storage blocked - incidents kept in memory only, may be lost on reload";
+      cls = "pending";
+    } else if (!s.configured) {
+      txt = "Local only - backend not configured"; cls = "off";
+    } else if (s.error === "auth") {
+      txt = `Sync blocked - sign-in expired or access revoked${n ? ` (${n} unsynced)` : ""}. Sign in again.`;
+      cls = "pending";
+    } else if (!s.online || s.error === "offline") {
+      txt = `Offline - ${n} change${plural} will sync when back online`; cls = "off";
+    } else if (s.error === "transient") {
+      txt = `Sync error - ${n} change${plural} pending, retrying`; cls = "pending";
+    } else if (n) {
+      txt = `Syncing ${n} change${plural}…`; cls = "pending";
+    } else {
+      txt = "Synced - shared across managers"; cls = "ok";
+    }
     return el("div", "sync-status " + cls, esc(txt));
   }
 
