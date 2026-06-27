@@ -1,7 +1,7 @@
-/* Boom SOS — backend config
+/* Boom SOS - backend config
  *
  * These are PUBLIC client credentials (Supabase publishable key). They are
- * safe to ship in the browser — access is governed by row-level security on
+ * safe to ship in the browser - access is governed by row-level security on
  * the boom_sos_incidents table, not by hiding this key.
  */
 window.BOOM_SOS_CONFIG = {

@@ -1,6 +1,6 @@
 /*
- * Boom SOS — Highlands data
- * BoomBozz Pizza & Watch Bar — 1448 Bardstown Rd
+ * Boom SOS - Highlands data
+ * BoomBozz Pizza & Watch Bar - 1448 Bardstown Rd
  *
  * This file is the single place to edit store-specific content.
  * Anything wrapped in [ ] is a placeholder that still needs real Highlands data.
@@ -90,14 +90,14 @@ const EMERGENCY_CARDS = [
     flow: {
       title: "Freezer Issue",
       immediate: [
-        "Keep the door shut — do not open to 'check'",
+        "Keep the door shut - do not open to 'check'",
         "Confirm the actual temp reading",
         "Check breaker / power / door-seal",
         "Move highest-risk product to backup freezer if available",
         "Take a photo of the display temp",
       ],
       riskCheck: [
-        "Frozen product thaws fast once it climbs — escalate early",
+        "Frozen product thaws fast once it climbs - escalate early",
         "If product is at risk, log affected inventory immediately",
       ],
       callNow: ["Primary refrigeration vendor", "Backup vendor", "GM", "John if not resolved in 15 minutes"],
@@ -125,8 +125,8 @@ const EMERGENCY_CARDS = [
         "Stop cooking on anything that needs ventilation",
       ],
       riskCheck: [
-        "Extended outage = product loss risk — start the cold-hold clock now",
-        "If outage during service, this is red-level — escalate",
+        "Extended outage = product loss risk - start the cold-hold clock now",
+        "If outage during service, this is red-level - escalate",
       ],
       callNow: ["Electrician (if breaker)", "Utility company (if block-wide)", "GM", "John"],
       questions: [
@@ -148,12 +148,12 @@ const EMERGENCY_CARDS = [
         "Confirm: is it internet, or just Toast?",
         "Reboot the modem/router (unplug 30 sec, plug back in)",
         "Switch Toast terminals to offline mode if available",
-        "Keep taking orders on paper — do not stop service",
+        "Keep taking orders on paper - do not stop service",
         "Note what stopped working and when",
       ],
       riskCheck: [
         "Card payments down during service = red-level, escalate",
-        "Log it even if it comes back — recurring outages matter",
+        "Log it even if it comes back - recurring outages matter",
       ],
       callNow: ["Internet provider", "Toast support", "GM", "John if down during service"],
       questions: [
@@ -173,7 +173,7 @@ const EMERGENCY_CARDS = [
       title: "Plumbing Backup",
       immediate: [
         "Stop using the affected drain/fixture immediately",
-        "Contain any standing water — block off the area",
+        "Contain any standing water - block off the area",
         "Locate the shutoff if it's a leak",
         "Take a photo of the issue",
         "If it affects food-prep sanitation, pause that station",
@@ -205,7 +205,7 @@ const EMERGENCY_CARDS = [
         "Pull enough clean ware to get through the rush",
       ],
       riskCheck: [
-        "No way to sanitize ware = service risk — escalate if it can't be covered manually",
+        "No way to sanitize ware = service risk - escalate if it can't be covered manually",
       ],
       callNow: ["Dishwasher/service vendor", "GM"],
       questions: [
@@ -230,7 +230,7 @@ const EMERGENCY_CARDS = [
         "Note whether it's not making ice or leaking",
       ],
       riskCheck: [
-        "Leaking ice machine can become a slip hazard — contain water",
+        "Leaking ice machine can become a slip hazard - contain water",
       ],
       callNow: ["Ice machine vendor", "GM"],
       questions: [
@@ -254,7 +254,7 @@ const EMERGENCY_CARDS = [
         "If dining room is unusable, plan seating around it",
       ],
       riskCheck: [
-        "Extreme temps affect guests and product — escalate if service is impacted",
+        "Extreme temps affect guests and product - escalate if service is impacted",
       ],
       callNow: ["HVAC vendor", "GM"],
       questions: [
@@ -273,7 +273,7 @@ const EMERGENCY_CARDS = [
     flow: {
       title: "Gas / Fire / Safety Issue",
       immediate: [
-        "Life safety first — evacuate if there's any fire or strong gas smell",
+        "Life safety first - evacuate if there's any fire or strong gas smell",
         "Call 911 if there is any doubt",
         "Shut off gas at the main if safe to do so",
         "Do not flip switches or create sparks if you smell gas",
@@ -322,7 +322,7 @@ const EMERGENCY_CARDS = [
     flow: {
       title: "Guest Incident",
       immediate: [
-        "Stay calm and listen — get the guest out of the dining flow",
+        "Stay calm and listen - get the guest out of the dining flow",
         "Address the immediate need (safety, comfort, food)",
         "Do not admit fault or promise compensation you can't approve",
         "Get names and details while it's fresh",
@@ -373,7 +373,7 @@ const VENDORS = VENDOR_CATEGORIES.map((category) => ({
     notes:
       category === "Refrigeration"
         ? "Mention Highlands walk-in. Ask for same-day ETA."
-        : "[Add notes — what to mention, account #, etc.]",
+        : "[Add notes - what to mention, account #, etc.]",
   },
   backup: {
     name: "[Add backup vendor]",
@@ -391,7 +391,7 @@ const PLAYBOOKS = [
     title: "Guest comp / remake",
     firstMove: "Acknowledge the issue, apologize once, and fix the food fast.",
     doNot: "Don't argue, don't over-comp, don't comp the whole check out of habit.",
-    approves: "[Add comp limits] — above that, GM approval required.",
+    approves: "[Add comp limits] - above that, GM approval required.",
     escalate: "Escalate to GM if the guest is still unhappy after a remake + reasonable comp.",
     log: "Log the comp/remake with the order #, amount, and reason.",
   },
@@ -399,7 +399,7 @@ const PLAYBOOKS = [
     id: "86",
     title: "Product 86 in Toast",
     firstMove: "86 the item in Toast immediately so it stops selling on all channels.",
-    doNot: "Don't just tell servers verbally — it'll keep selling online.",
+    doNot: "Don't just tell servers verbally - it'll keep selling online.",
     approves: "MOD can 86; restocking/par decisions go to GM.",
     escalate: "Escalate if a core item will be 86'd through a full service.",
     log: "Log what was 86'd, why, and when it's expected back.",
@@ -427,7 +427,7 @@ const PLAYBOOKS = [
     title: "Refund issue",
     firstMove: "Verify the original transaction before issuing anything.",
     doNot: "Don't issue cash refunds for card orders; don't refund without a record.",
-    approves: "[Add refund limit] — above that needs GM approval.",
+    approves: "[Add refund limit] - above that needs GM approval.",
     escalate: "Escalate repeat refund requests or anything that smells like fraud.",
     log: "Log the refund with order #, amount, method, and reason.",
   },
@@ -453,7 +453,7 @@ const PLAYBOOKS = [
     id: "delivery",
     title: "Delivery app issue",
     firstMove: "Identify which app and whether it's orders-in or driver-side.",
-    doNot: "Don't keep accepting orders you can't fulfill — pause the app if needed.",
+    doNot: "Don't keep accepting orders you can't fulfill - pause the app if needed.",
     approves: "MOD can pause an app temporarily; GM for ongoing decisions.",
     escalate: "Escalate if an outage is costing real sales during peak.",
     log: "Log the app, the issue, the time window, and any refunds.",
@@ -488,7 +488,7 @@ const PLAYBOOKS = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* Ask Boom — rule-based concierge                                    */
+/* Ask Boom - rule-based concierge                                    */
 /* Each entry returns the same tight 5-part shape.                    */
 /* ------------------------------------------------------------------ */
 
@@ -544,7 +544,7 @@ const ASK_BOOM = [
       now: [
         "Confirm internet vs. just Toast",
         "Reboot the modem (unplug 30 sec)",
-        "Go to Toast offline mode / paper tickets — keep serving",
+        "Go to Toast offline mode / paper tickets - keep serving",
       ],
       call: ["Internet provider and/or Toast support", "GM"],
       escalate: "John if card payments are down during service (red-level).",
@@ -587,7 +587,7 @@ const ASK_BOOM = [
     prompt: "Ice machine leaking",
     answer: {
       now: [
-        "Contain the water — it's a slip hazard",
+        "Contain the water - it's a slip hazard",
         "Check power and the water line",
         "Source bagged ice as backup",
       ],

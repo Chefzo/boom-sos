@@ -1,9 +1,9 @@
-/* Boom SOS — incident store
+/* Boom SOS - incident store
  *
  * Offline-first. localStorage is always the working copy so the log keeps
  * functioning when the internet is down (which is one of the emergencies this
- * tool exists for). When online, changes sync to Supabase so every manager —
- * and eventually every store — sees the same log.
+ * tool exists for). When online, changes sync to Supabase so every manager -
+ * and eventually every store - sees the same log.
  *
  * Flow:
  *   - add/update write locally first, mark the record dirty, render instantly
@@ -120,7 +120,7 @@
       saveLocal();
       emit();
     } catch (e) {
-      /* offline or transient error — local copy stands */
+      /* offline or transient error - local copy stands */
     } finally {
       syncing = false;
     }

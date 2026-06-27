@@ -1,8 +1,8 @@
-/* Boom SOS — auth (email magic link)
+/* Boom SOS - auth (email magic link)
  *
  * Design choice: this gates ONLY the shared incident log. The emergency
  * reference content (cards, vendors, playbooks, Ask Boom) is never behind a
- * login — you should never have to sign in to read "shut off the gas."
+ * login - you should never have to sign in to read "shut off the gas."
  *
  * Sessions persist, so a manager signs in once and stays in. The allowlisted
  * manager row is cached locally so logging keeps working offline after the

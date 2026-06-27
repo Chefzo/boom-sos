@@ -1,4 +1,4 @@
-/* Boom SOS — Highlands  | app logic */
+/* Boom SOS - Highlands  | app logic */
 (function () {
   "use strict";
 
@@ -26,14 +26,14 @@
     if (realPhone(phone)) {
       window.location.href = telHref(phone);
     } else {
-      toast(`${label}: number not set yet — add it in data.js`);
+      toast(`${label}: number not set yet - add it in data.js`);
     }
   }
   function smsOrCopy(label, phone, body) {
     if (realPhone(phone)) {
       window.location.href = `sms:${String(phone).replace(/[^\d+]/g, "")}${body ? "?&body=" + encodeURIComponent(body) : ""}`;
     } else {
-      toast(`${label}: number not set yet — add it in data.js`);
+      toast(`${label}: number not set yet - add it in data.js`);
     }
   }
 
@@ -143,7 +143,7 @@
         () => callOrCopy(vendor.category + " vendor", vendor.primary.phone)));
     }
     grid2.appendChild(mkBtn("💬 Text GM", "dark",
-      () => smsOrCopy("GM", CONTACTS.gm.phone, `Boom SOS — ${STORE.name}: ${f.title}. `)));
+      () => smsOrCopy("GM", CONTACTS.gm.phone, `Boom SOS - ${STORE.name}: ${f.title}. `)));
     grid2.appendChild(mkBtn("⬆️ Escalate to John", "dark",
       () => callOrCopy("John", CONTACTS.john.phone)));
     grid2.appendChild(mkBtn("📋 Log incident", "ghost",
@@ -444,7 +444,7 @@
     const card = el("div", "gate",
       `<h3>Sign in to the incident log</h3>
        <p>The shared log is for Highlands managers. Enter your work email and
-       we'll send a one-tap sign-in link — no password.</p>`);
+       we'll send a one-tap sign-in link - no password.</p>`);
     const field = el("div", "field",
       `<label>Work email</label><input id="gateEmail" type="email" inputmode="email"
         autocomplete="email" value="${esc(last)}" placeholder="you@boombozz.com">`);
@@ -486,10 +486,10 @@
   function syncStatusLine() {
     const s = IncidentStore.status();
     let txt, cls;
-    if (!s.configured) { txt = "Local only — backend not configured"; cls = "off"; }
-    else if (!s.online) { txt = `Offline — ${s.pending} change${s.pending === 1 ? "" : "s"} will sync when back online`; cls = "off"; }
+    if (!s.configured) { txt = "Local only - backend not configured"; cls = "off"; }
+    else if (!s.online) { txt = `Offline - ${s.pending} change${s.pending === 1 ? "" : "s"} will sync when back online`; cls = "off"; }
     else if (s.pending) { txt = `Syncing ${s.pending} change${s.pending === 1 ? "" : "s"}…`; cls = "pending"; }
-    else { txt = "Synced — shared across managers"; cls = "ok"; }
+    else { txt = "Synced - shared across managers"; cls = "ok"; }
     return el("div", "sync-status " + cls, esc(txt));
   }
 
